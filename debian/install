@@ -1,4 +1,3 @@
-site-lisp /usr/share/deepin-emacs/
-site-start.el /usr/share/deepin-emacs/common/share/emacs/site-lisp/
-deepin-emacs.desktop /usr/share/applications/
-deepin-emacs.svg /usr/share/icons/hicolor/scalable/apps/
+scripts/bash_pinyin_completion /etc/bash_completion.d/
+bash-pinyin-completion /usr/bin/
+char-pinyin.txt /usr/share/bash-pinyin-completion/
