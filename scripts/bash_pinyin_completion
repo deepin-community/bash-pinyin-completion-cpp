@@ -1,0 +1,141 @@
+#!/usr/bin/env bash
+
+# Load bash-completion if not loaded
+# [ -f /usr/share/bash-completion/bash_completion ] && \
+#     . /usr/share/bash-completion/bash_completion
+
+# Detect bash-completion
+if ! declare -F _comp_compgen_filedir &>/dev/null; then
+    echo "No function _comp_compgen_filedir found. Please install bash-completion first."
+    exit 1
+fi
+
+eval "function __bak_comp_compgen_filedir() { $(declare -f _comp_compgen_filedir | tail -n +2) }"
+eval "function __bak_comp_compgen_filedir_xspec() { $(declare -f _comp_compgen_filedir_xspec | tail -n +2) }"
+eval "function __bak_comp_complete_minimal() { $(declare -f _comp_complete_minimal | tail -n +2) }"
+eval "function __bak_comp_expand_glob() { $(declare -f _comp_expand_glob | tail -n +2) }"
+
+# replace _comp_compgen_filedir
+_comp_compgen_filedir() {
+    __bak_comp_compgen_filedir "$@"
+    _pinyin_completion "$@"
+}
+
+_comp_compgen_filedir_xspec() {
+    __bak_comp_compgen_filedir_xspec "$@"
+    _pinyin_completion "$@"
+}
+
+_comp_complete_minimal() { 
+    __bak_comp_complete_minimal "$@"
+    _pinyin_completion "$@"
+}
+
+_comp_expand_glob() {
+    __bak_comp_expand_glob "$@"
+    _pinyin_completion "$@"
+}
+
+_pinyin_completion() {
+    # Check COMP_WORDS existence
+    if [ ${#COMP_WORDS[@]} -eq 0 ] || [ -z "${COMP_CWORD+x}" ]; then
+        return
+    fi
+
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+
+    # Detect "~/"
+    local homeStart
+    if [ "${cur:0:2}" = "~/" ]; then
+        homeStart=true
+    else
+        homeStart=false
+    fi
+
+    # ignore empty
+    [ -z "$cur" ] && return
+
+     _expand || return 0
+
+    if [[ "${cur:0:1}" == "'" || "${cur:0:1}" == "\"" ]]; then
+        local dirpart="$(dirname -- "${cur:1}")"
+        local basepart="$(basename -- "${cur:1}")"
+    else
+        local dirpart="$(dirname -- "$cur")"
+        local basepart="$(basename -- "$cur")"
+    fi
+
+    # realpath resolve current path as ".", if user did not enter "./" then ignore.
+    [[ "$dirpart" == "." && "${cur:0:2}" != "./" ]] && dirpart=""
+
+    local savedPWD="$PWD"
+    local resolved_dir
+    local compgen_opts=(-f)
+    [[ "${1-}" == -d ]] && compgen_opts=(-d)
+
+    if [[ -n "$dirpart" ]]; then
+        resolved_dir="$(realpath -- "$dirpart" 2>/dev/null)"
+        if [[ -d "$resolved_dir" ]]; then
+            cd -- "$resolved_dir" 2>/dev/null || return
+        else
+            cd "$savedPWD" || return
+            return
+        fi
+    fi
+
+    local -a pinyin_matched
+    if [[ "${compgen_opts[0]}" == -d ]]; then
+        mapfile -t pinyin_matched < <(
+            compgen -d -- |
+            bash-pinyin-completion "$basepart" 2>/dev/null
+            )
+    else
+        mapfile -t pinyin_matched < <(
+            compgen -f -- |
+            bash-pinyin-completion "$basepart" 2>/dev/null
+        )
+        if [ ${#pinyin_matched[@]} -ne 0 ]; then
+            compopt -o filenames 2>/dev/null
+        fi
+    fi
+
+    if [[ -n "$dirpart" ]]; then
+        local sep="/"
+        # dirpart is root
+        if [[ "$dirpart" == "/" ]]; then
+            sep=""
+        fi
+        
+        for i in "${!pinyin_matched[@]}"; do
+            pinyin_matched[$i]="${dirpart}${sep}${pinyin_matched[$i]}"
+        done
+    fi
+
+    cd "$savedPWD" || return
+
+    # merge result
+    local -a old_candidates=("${COMPREPLY[@]}")
+    COMPREPLY=("${old_candidates[@]}" "${pinyin_matched[@]}")
+
+    # mapfile -t COMPREPLY < <(printf "%s\n" "${COMPREPLY[@]}" | awk '!seen[$0]++')
+    declare -A seen
+    local -a unique_compreply=()
+    for item in "${COMPREPLY[@]}"; do
+        if [[ -z "${seen[$item]}" ]]; then
+            seen["$item"]=1
+            unique_compreply+=( "$item" )
+        fi
+    done
+    COMPREPLY=( "${unique_compreply[@]}" )
+
+    if [[ "$homeStart" == true ]]; then
+        local home="$HOME"
+        for i in "${!COMPREPLY[@]}"; do
+            case "${COMPREPLY[$i]}" in
+                "$home"/*)
+                    COMPREPLY[$i]="~${COMPREPLY[$i]#"$home"}"
+                    ;;
+            esac
+        done
+    fi
+}
