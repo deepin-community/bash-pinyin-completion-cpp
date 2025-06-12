@@ -2,7 +2,7 @@ Source: bash-pinyin-completion
 Section: shells
 Priority: optional
 Maintainer: Deepin Packages Builder <packages@linuxdeepin.com>
-Build-Depends: gcc
+Build-Depends: 
 Standards-Version: 0.0.1
 Homepage: https://github.com/apr3vau/bash-pinyin-completion-cpp
 
