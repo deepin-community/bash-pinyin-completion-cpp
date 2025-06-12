@@ -19,10 +19,6 @@ vector<string> split_string(string str, char delim) {
     return vec;
 }
 
-#include <string>
-#include <iostream>
-#include <vector>
-
 vector<string> read_utf8(string str) {
     vector<string> chars;
     for (size_t i = 0; i < str.size();) {
@@ -55,6 +51,7 @@ unordered_map<string, string> read_dict() {
     if (env != nullptr) {
         dirs = split_string(env, ':');
     }
+    dirs.push_back("/usr/share");
     string dict_file;
     for (auto dir : dirs) {
         if (filesystem::exists(dir) && 
