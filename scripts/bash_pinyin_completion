@@ -1,9 +1,3 @@
-#!/usr/bin/env bash
-
-# Load bash-completion if not loaded
-# [ -f /usr/share/bash-completion/bash_completion ] && \
-#     . /usr/share/bash-completion/bash_completion
-
 # Detect bash-completion
 if ! declare -F _comp_compgen_filedir &>/dev/null; then
     echo "No function _comp_compgen_filedir found. Please install bash-completion first."
