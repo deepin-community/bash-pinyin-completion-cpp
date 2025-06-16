@@ -1,4 +1,11 @@
 #!/usr/bin/make -f
+# -*- makefile -*-
+#export DH_VERBOSE=1
 
 %:
 	dh $@
+
+BUILDDIR = $(CURDIR)/build
+
+override_dh_auto_build:
+	cd $(CURDIR) && c++ -std=c++23 bash-pinyin-completion.cpp -o bash-pinyin-completion
