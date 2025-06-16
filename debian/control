@@ -8,6 +8,6 @@ Homepage: https://github.com/apr3vau/bash-pinyin-completion-cpp
 
 Package: bash-pinyin-completion
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, bash-completion
+Depends: ${shlibs:Depends}, ${misc:Depends}, bash-completion (>= 1:2.12)
 Description: Chinese Pinyin completion for bash
  Complete Chinese pathname using pinyin in bash
