@@ -1,3 +1,13 @@
+
+DEBUG_LOG="/tmp/pinyin_completion_debug.log"
+rm -f "$DEBUG_LOG"
+touch "$DEBUG_LOG"
+
+debug() {
+    echo "[$(date +%T.%N)] $*" >> "$DEBUG_LOG"
+}
+debug "Debug Session:"
+
 # Detect bash-completion
 if ! declare -F _comp_compgen_filedir &>/dev/null; then
     echo "No function _comp_compgen_filedir found. Please install bash-completion first."
@@ -49,69 +59,24 @@ _pinyin_completion() {
     # ignore empty
     [ -z "$cur" ] && return
 
-     _expand || return 0
+    _expand || return 0
 
-    if [[ "${cur:0:1}" == "'" || "${cur:0:1}" == "\"" ]]; then
-        local dirpart="$(dirname -- "${cur:1}")"
-        local basepart="$(basename -- "${cur:1}")"
-    else
-        local dirpart="$(dirname -- "$cur")"
-        local basepart="$(basename -- "$cur")"
-    fi
-
-    # realpath resolve current path as ".", if user did not enter "./" then ignore.
-    [[ "$dirpart" == "." && "${cur:0:2}" != "./" ]] && dirpart=""
-
-    local savedPWD="$PWD"
-    local resolved_dir
+    # compgen options
     local compgen_opts=(-f)
     [[ "${1-}" == -d ]] && compgen_opts=(-d)
 
-    if [[ -n "$dirpart" ]]; then
-        resolved_dir="$(realpath -- "$dirpart" 2>/dev/null)"
-        if [[ -d "$resolved_dir" ]]; then
-            cd -- "$resolved_dir" 2>/dev/null || return
-        else
-            cd "$savedPWD" || return
-            return
-        fi
-    fi
-
+    # Main part
     local -a pinyin_matched
-    if [[ "${compgen_opts[0]}" == -d ]]; then
-        mapfile -t pinyin_matched < <(
-            compgen -d -- |
-            bash-pinyin-completion "$basepart" 2>/dev/null
-            )
-    else
-        mapfile -t pinyin_matched < <(
-            compgen -f -- |
-            bash-pinyin-completion "$basepart" 2>/dev/null
-        )
-        if [ ${#pinyin_matched[@]} -ne 0 ]; then
-            compopt -o filenames 2>/dev/null
-        fi
-    fi
-
-    if [[ -n "$dirpart" ]]; then
-        local sep="/"
-        # dirpart is root
-        if [[ "$dirpart" == "/" ]]; then
-            sep=""
-        fi
-        
-        for i in "${!pinyin_matched[@]}"; do
-            pinyin_matched[$i]="${dirpart}${sep}${pinyin_matched[$i]}"
-        done
-    fi
-
-    cd "$savedPWD" || return
+    OLDIFS=$IFS
+    IFS=$'\n'
+    pinyin_matched=$(bash-pinyin-completion "$cur" "$compgen_opts")
+    read -ra pinyin_matched <<< "$pinyin_matched"
+    IFS=$OLDIFS
 
     # merge result
     local -a old_candidates=("${COMPREPLY[@]}")
     COMPREPLY=("${old_candidates[@]}" "${pinyin_matched[@]}")
-
-    # mapfile -t COMPREPLY < <(printf "%s\n" "${COMPREPLY[@]}" | awk '!seen[$0]++')
+    
     declare -A seen
     local -a unique_compreply=()
     for item in "${COMPREPLY[@]}"; do

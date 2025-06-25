@@ -1,0 +1,5 @@
+.clangd
+.DS_Store
+scripts/bash_pinyin_completion.bak.sh
+*.bak
+*~

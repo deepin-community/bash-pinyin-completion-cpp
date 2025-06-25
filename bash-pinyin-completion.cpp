@@ -1,3 +1,5 @@
+// -*- indent-tabs-mode: nil; tab-width: 4 -*-
+#include <cstdio>
 #include <iostream>
 #include <unordered_map>
 #include <cstdlib>
@@ -6,6 +8,7 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <unistd.h>
 
 using namespace std;
 
@@ -47,7 +50,7 @@ unordered_map<string, string> dict;
 
 unordered_map<string, string> read_dict() {
     vector<string> dirs;
-    auto env = getenv("XDG_DATA_DIR");
+    auto env = getenv("XDG_DATA_DIRS");
     if (env != nullptr) {
         dirs = split_string(env, ':');
     }
@@ -55,8 +58,9 @@ unordered_map<string, string> read_dict() {
     string dict_file;
     for (auto dir : dirs) {
         if (filesystem::exists(dir) && 
-        filesystem::exists(dir.append("/bash-pinyin-completion/char-pinyin.txt"))) {
+            filesystem::exists(dir.append("/bash-pinyin-completion/char-pinyin.txt"))) {
             dict_file = dir;
+            break;
         }
     }
     ifstream in(dict_file);
@@ -69,8 +73,8 @@ unordered_map<string, string> read_dict() {
         if (in.eof()) break;
         in.get();
         if (in.eof()) break;
-
     }
+    in.close();
     return dict;
 }
 
@@ -91,20 +95,57 @@ string string_pinyin(string str) {
     return result;
 }
 
+string run_command(string cmd) {
+    FILE* pipe = popen(cmd.c_str(), "r");
+    if (!pipe) return "ERROR";
+    char buffer[128];
+    std::string result = "";
+    while(!feof(pipe)) {
+        if(fgets(buffer, 128, pipe) != NULL)
+            result += buffer;
+    }
+    pclose(pipe);
+    return result;
+}
+
 int main(int argc, char **argv) {
-    read_dict();
     if (argc < 2) {
         cout << "Usage: " << argv[0] << " <pinyin>" << endl;
         return 0;
     }
-    auto input = string_pinyin(argv[1]);
-    while (true){
-        string line;
-        getline(cin, line);
-        if (string_pinyin(line).compare(0, input.size(), input) == 0) {
-            cout << line << endl;
+    read_dict();
+    auto input = string(argv[1]);
+    if (input.front() == '~') {
+        auto home = getenv("HOME");
+        input.erase(input.begin());
+        input = home + input;
+    }
+    auto split = split_string(input, '/');
+    auto final = split.back();
+    if (input.back() != '/') {
+        split.pop_back();
+    }
+    auto pinyin = string_pinyin(final);
+    auto compgen_opts = string(argv[2]);
+    // Navigate to the dir we need to complete
+    auto dest = filesystem::path(input.c_str()).parent_path();
+    if (!dest.empty()) {
+        if (!filesystem::exists(dest)) {
+            return 0;
         }
-        if (cin.eof()) return 0;
+        filesystem::current_path(dest);
+    }
+    // Call compgen at that dir
+    auto compreply = split_string(run_command("/usr/bin/env bash -c \"compgen " + compgen_opts + "\""), '\n');
+    for (auto reply : compreply) {
+        auto reply_pinyin = string_pinyin(reply);
+        if (reply_pinyin.compare(0, pinyin.size(), pinyin) == 0) {
+            for (auto substr : split) {
+                cout << substr << "/";
+            }
+            cout << reply << endl;
+        }
     }
     return 0;
 }
+// vi: shiftwidth=4

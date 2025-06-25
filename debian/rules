@@ -4,8 +4,3 @@
 
 %:
 	dh $@
-
-BUILDDIR = $(CURDIR)/build
-
-override_dh_auto_build:
-	cd $(CURDIR) && c++ -std=c++23 bash-pinyin-completion.cpp -o bash-pinyin-completion
