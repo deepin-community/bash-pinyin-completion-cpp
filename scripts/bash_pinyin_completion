@@ -1,13 +1,3 @@
-
-DEBUG_LOG="/tmp/pinyin_completion_debug.log"
-rm -f "$DEBUG_LOG"
-touch "$DEBUG_LOG"
-
-debug() {
-    echo "[$(date +%T.%N)] $*" >> "$DEBUG_LOG"
-}
-debug "Debug Session:"
-
 # Detect bash-completion
 if ! declare -F _comp_compgen_filedir &>/dev/null; then
     echo "No function _comp_compgen_filedir found. Please install bash-completion first."
@@ -71,11 +61,7 @@ _pinyin_completion() {
 
     # Main part
     local -a pinyin_matched
-    local OLDIFS=$IFS
-    IFS=$'\n'
-    pinyin_matched="$(bash-pinyin-completion "$cur" "$compgen_opts")"
-    read -ra pinyin_matched <<< "$pinyin_matched"
-    IFS=$OLDIFS
+    readarray -t pinyin_matched < <(bash-pinyin-completion "$cur" "$compgen_opts")
 
     # merge result
     local -a old_candidates=("${COMPREPLY[@]}")
