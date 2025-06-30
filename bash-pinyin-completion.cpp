@@ -110,7 +110,7 @@ string run_command(string cmd) {
 
 int main(int argc, char **argv) {
     if (argc < 2) {
-        cout << "Usage: " << argv[0] << " <pinyin>" << endl;
+        cout << "Usage: " << argv[0] << " <pinyin> <compgen option>" << endl;
         return 0;
     }
     read_dict();

@@ -45,6 +45,10 @@ _pinyin_completion() {
     if [ ${#COMP_WORDS[@]} -eq 0 ] || [ -z "${COMP_CWORD+x}" ]; then
         return
     fi
+    
+    if [ -z "$(which bash-pinyin-completion)" ]; then
+      return
+    fi
 
     local cur="${COMP_WORDS[COMP_CWORD]}"
 
@@ -67,9 +71,9 @@ _pinyin_completion() {
 
     # Main part
     local -a pinyin_matched
-    OLDIFS=$IFS
+    local OLDIFS=$IFS
     IFS=$'\n'
-    pinyin_matched=$(bash-pinyin-completion "$cur" "$compgen_opts")
+    pinyin_matched="$(bash-pinyin-completion "$cur" "$compgen_opts")"
     read -ra pinyin_matched <<< "$pinyin_matched"
     IFS=$OLDIFS
 
