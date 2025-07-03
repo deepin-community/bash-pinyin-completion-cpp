@@ -1,4 +1,10 @@
-bash-pinyin-completion (0.0.1) UNRELEASED; urgency=medium
+bash-pinyin-completion (0.0.2) unstable; urgency=medium
+
+  * Fix completion exception.
+
+ -- lichenggang <lichenggang@deepin.org>  Thu, 03 Jul 2025 14:31:32 +0800
+
+bash-pinyin-completion (0.0.1) unstable; urgency=medium
 
   * Initial release
 
