@@ -61,7 +61,14 @@ _pinyin_completion() {
 
     # Main part
     local -a pinyin_matched
-    readarray -t pinyin_matched < <(bash-pinyin-completion "$cur" "$compgen_opts")
+    if [[ "${compgen_opts[0]}" == -d ]]; then
+        readarray -t pinyin_matched < <(bash-pinyin-completion "$cur" "-d")
+    else
+        readarray -t pinyin_matched < <(bash-pinyin-completion "$cur" "-f")
+        if [ ${#pinyin_matched[@]} -ne 0 ]; then
+            compopt -o filenames 2>/dev/null
+        fi
+    fi
 
     # merge result
     local -a old_candidates=("${COMPREPLY[@]}")
