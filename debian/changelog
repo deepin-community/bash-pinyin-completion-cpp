@@ -1,3 +1,9 @@
+bash-pinyin-completion (0.0.2) unstable; urgency=medium
+
+  * Move logic to C++, fix several issues
+
+ -- April Lu <apr3vau@outlook.com>  Wed, 09 Jul 2025 10:10:00 +0800
+
 bash-pinyin-completion (0.0.1) UNRELEASED; urgency=medium
 
   * Initial release
