@@ -1,3 +1,9 @@
+bash-pinyin-completion (0.0.3) unstable; urgency=medium
+
+  * fix sshfs command tab shows multiple home.
+
+ -- lichenggang <lichenggang@deepin.org>  Wed, 09 Jul 2025 10:44:25 +0800
+
 bash-pinyin-completion (0.0.2) unstable; urgency=medium
 
   * Move logic to C++, fix several issues
