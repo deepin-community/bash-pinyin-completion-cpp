@@ -1,10 +1,10 @@
 Source: bash-pinyin-completion
 Section: shells
 Priority: optional
-Maintainer: Deepin Packages Builder <packages@linuxdeepin.com>
+Maintainer: April Lu <apr3vau@outlook.com>
 Build-Depends: debhelper-compat (= 13)
 Standards-Version: 4.7.2.0
-Homepage: https://github.com/apr3vau/bash-pinyin-completion-cpp
+Homepage: https://github.com/calsym456/bash-pinyin-completion-cpp
 
 Package: bash-pinyin-completion
 Architecture: any

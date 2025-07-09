@@ -121,8 +121,11 @@ int main(int argc, char **argv) {
         input = home + input;
     }
     auto split = split_string(input, '/');
-    auto final = split.back();
-    if (input.back() != '/') {
+    string final;
+    if (input.back() == '/') {
+        final = "";
+    } else {
+        final = split.back();
         split.pop_back();
     }
     auto pinyin = string_pinyin(final);
@@ -130,7 +133,7 @@ int main(int argc, char **argv) {
     // Navigate to the dir we need to complete
     auto dest = filesystem::path(input.c_str()).parent_path();
     if (!dest.empty()) {
-        if (!filesystem::exists(dest)) {
+        if (!filesystem::exists(dest) || !filesystem::is_directory(dest)) {
             return 0;
         }
         filesystem::current_path(dest);
@@ -139,6 +142,7 @@ int main(int argc, char **argv) {
     auto compreply = split_string(run_command("/usr/bin/env bash -c \"compgen " + compgen_opts + "\""), '\n');
     for (auto reply : compreply) {
         auto reply_pinyin = string_pinyin(reply);
+        if (reply_pinyin == reply) continue;
         if (reply_pinyin.compare(0, pinyin.size(), pinyin) == 0) {
             for (auto substr : split) {
                 cout << substr << "/";
