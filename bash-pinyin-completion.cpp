@@ -142,6 +142,7 @@ int main(int argc, char **argv) {
     auto compreply = split_string(run_command("/usr/bin/env bash -c \"compgen " + compgen_opts + "\""), '\n');
     for (auto reply : compreply) {
         auto reply_pinyin = string_pinyin(reply);
+        if (reply_pinyin == reply) continue;
         if (reply_pinyin.compare(0, pinyin.size(), pinyin) == 0) {
             for (auto substr : split) {
                 cout << substr << "/";
