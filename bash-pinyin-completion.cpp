@@ -136,7 +136,11 @@ int main(int argc, char **argv) {
         if (!filesystem::exists(dest) || !filesystem::is_directory(dest)) {
             return 0;
         }
-        filesystem::current_path(dest);
+        try {
+            filesystem::current_path(dest);
+        } catch (filesystem::filesystem_error const& code) {
+            return 0;
+        }
     }
     // Call compgen at that dir
     auto compreply = split_string(run_command("/usr/bin/env bash -c \"compgen " + compgen_opts + "\""), '\n');
