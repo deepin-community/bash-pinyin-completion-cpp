@@ -54,14 +54,22 @@ unordered_map<string, string> read_dict() {
     if (env != nullptr) {
         dirs = split_string(env, ':');
     }
+
     dirs.push_back("/usr/share");
     string dict_file;
-    for (auto dir : dirs) {
-        if (filesystem::exists(dir) && 
-            filesystem::exists(dir.append("/bash-pinyin-completion/char-pinyin.txt"))) {
-            dict_file = dir;
-            break;
+    std::error_code ec; // Reusable error code object
+
+    for (const auto& dir : dirs) {
+        // Use the error_code overload to prevent exceptions on Permission Denied
+        if (filesystem::exists(dir, ec) && !ec) {
+            // Use path operator/ for cleaner and safer path concatenation
+            auto p = filesystem::path(dir) / "bash-pinyin-completion" / "char-pinyin.txt";
+            if (filesystem::exists(p, ec) && !ec) {
+                dict_file = p.string();
+                break;
+            }
         }
+        ec.clear(); // Ensure ec is cleared for the next iteration
     }
     ifstream in(dict_file);
     while (true) {
@@ -130,15 +138,21 @@ int main(int argc, char **argv) {
     }
     auto pinyin = string_pinyin(final);
     auto compgen_opts = string(argv[2]);
+
     // Navigate to the dir we need to complete
     auto dest = filesystem::path(input.c_str()).parent_path();
     if (!dest.empty()) {
-        if (!filesystem::exists(dest) || !filesystem::is_directory(dest)) {
+        std::error_code ec;
+
+        // Check if path exists and is a directory without throwing exceptions
+        if (!filesystem::exists(dest, ec) || ec || !filesystem::is_directory(dest, ec) || ec) {
             return 0;
         }
-        try {
-            filesystem::current_path(dest);
-        } catch (filesystem::filesystem_error const& code) {
+
+        // Attempt to change the current working directory
+        filesystem::current_path(dest, ec);
+        if (ec) {
+            // If chdir fails (e.g., EACCES), exit silently to avoid crashing the shell completion
             return 0;
         }
     }
