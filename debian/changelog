@@ -1,3 +1,9 @@
+bash-pinyin-completion (0.0.3+num2) unstable; urgency=medium
+
+  * fix filesystem error when tab.
+
+ -- xinpeng.wang <wangxinpeng@uniontech.com>  Mon, 23 Mar 2026 14:21:13 +0800
+
 bash-pinyin-completion (0.0.3+num1) unstable; urgency=medium
 
   * update changelog
